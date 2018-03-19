@@ -1,6 +1,13 @@
 cmake_minimum_required (VERSION 3.0 FATAL_ERROR)
 project (OpenFace VERSION 0.4.2)
 
+# Must use GNUInstallDirs to install libraries into correct
+# locations on all platforms.
+include(GNUInstallDirs)
+
+message("##### This is OpenFace version ${PROJECT_VERSION} #####") 
+
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
@@ -9,29 +16,40 @@ set(CMAKE_CONFIG_DIR etc/OpenFace)
 set(CONFIG_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_CONFIG_DIR}")
 add_definitions(-DCONFIG_DIR="${CONFIG_DIR}")
 
-find_package( BLAS REQUIRED )
-include_directories( ${BLAS_INCLUDE_DIRS} )
-LINK_DIRECTORIES(${BLAS_LIBRARY_DIRS})	
+# Include BLAS as an imported target
+find_package(BLAS REQUIRED)
+add_library(blas INTERFACE IMPORTED)
+set_property(TARGET blas PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${BLAS_INCLUDE_DIRS})
+set_property(TARGET blas PROPERTY INTERFACE_LINK_LIBRARIES ${BLAS_LIBRARIES} ${BLAS95_LIBRARIES})
+message("BLAS information:") 
+message("  BLAS libraries: ${BLAS_LIBRARIES} ${BLAS95_LIBRARIES}") 
 
-find_package( OpenCV 3.3 REQUIRED )
+# Include OpenCV as an imported target
+find_package(OpenCV 3.3 CONFIG REQUIRED core imgproc objdetect highgui videoio calib3d)
+message("OpenCV information:") 
+message("  Found OpenCV ${OpenCV_VERSION}") 
+message("  OpenCV_INCLUDE_DIRS: ${OpenCV_INCLUDE_DIRS}") 
+message("  OpenCV_LIBRARIES: ${OpenCV_LIBRARIES}") 
+message("  OpenCV_LIBRARY_DIRS: ${OpenCV_LIBRARY_DIRS}") 
 
-MESSAGE("OpenCV information:") 
-MESSAGE("  OpenCV_INCLUDE_DIRS: ${OpenCV_INCLUDE_DIRS}") 
-MESSAGE("  OpenCV_LIBRARIES: ${OpenCV_LIBRARIES}") 
-MESSAGE("  OpenCV_LIBRARY_DIRS: ${OpenCV_LIBRARY_DIRS}") 
-include_directories( ${OpenCV_INCLUDE_DIRS} )
+# Include Boost as an imported target
+find_package(Boost 1.5.9 REQUIRED COMPONENTS filesystem system)
+add_library(boost INTERFACE IMPORTED)
+set_property(TARGET boost PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${Boost_INCLUDE_DIRS})
+set_property(TARGET boost PROPERTY INTERFACE_LINK_LIBRARIES ${Boost_LIBRARIES})
+message("Boost information:") 
+message("  Found Boost ${Boost_VERSION}") 
+message("  Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}") 
+message("  Boost_LIBRARIES: ${Boost_LIBRARIES}") 
+message("  Boost_LIBRARY_DIRS: ${Boost_LIBRARY_DIRS}") 
 
-find_package( Boost 1.5.9 REQUIRED COMPONENTS filesystem system)
-MESSAGE("Boost information:") 
-MESSAGE("  Boost_INCLUDE_DIRS: ${Boost_INCLUDE_DIRS}") 
-MESSAGE("  Boost_LIBRARIES: ${Boost_LIBRARIES}") 
-MESSAGE("  Boost_LIBRARY_DIRS: ${Boost_LIBRARY_DIRS}") 
-
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS}/boost)
-LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})	
-
+# Include TBB as an imported target
 find_package(TBB REQUIRED)
+add_library(tbb INTERFACE IMPORTED)
+set_property(TARGET tbb PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${TBB_INCLUDE_DIR})
+set_property(TARGET tbb PROPERTY INTERFACE_LINK_LIBRARIES ${TBB_LIBRARIES})
+message("Found TBB ${TBB_VERSION}") 
+
 
 # Move LandmarkDetector model
 file(GLOB files "lib/local/LandmarkDetector/model/*.txt")
@@ -175,15 +193,27 @@ if(WIN32)
 	include_directories(lib/3rdParty/boost)
 	include_directories(lib/3rdParty/boost/boost)
 	link_directories( ${PROJECT_SOURCE_DIR}/lib/3rdParty/boost/lib )
-else()
-	INCLUDE_DIRECTORIES(${BOOST_INCLUDE_DIR})
 endif()
 
 # dlib
-include_directories(lib/3rdParty/dlib/include)
+find_package(dlib 18.18 CONFIG)
+ 
+if(${dlib_FOUND})
+	add_library(dlib INTERFACE IMPORTED)
+	set_property(TARGET dlib PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${dlib_INCLUDE_DIRS})
+	set_property(TARGET dlib PROPERTY INTERFACE_LINK_LIBRARIES ${dlib_LIBRARIES})
 
-# dlib library
-add_subdirectory(lib/3rdParty/dlib)
+	message("dlib information:") 
+	message("  Found dlib version: ${dlib_VERSION}") 
+	message("  dlib_INCLUDE_DIRS: ${dlib_INCLUDE_DIRS}") 
+else()
+	message(WARNING "dlib not found in the system. We will compile it.") 
+	include_directories(lib/3rdParty/dlib/include)
+
+	# dlib library
+	add_subdirectory(lib/3rdParty/dlib)
+
+endif()
 
 # LandmarkDetector library
 add_subdirectory(lib/local/LandmarkDetector)
@@ -193,8 +223,44 @@ add_subdirectory(lib/local/FaceAnalyser)
 add_subdirectory(lib/local/GazeAnalyser)
 # Utilities library
 add_subdirectory(lib/local/Utilities)
+
 # executables
 add_subdirectory(exe/FaceLandmarkImg)
 add_subdirectory(exe/FaceLandmarkVid)
 add_subdirectory(exe/FaceLandmarkVidMulti)
 add_subdirectory(exe/FeatureExtraction)
+
+
+# generation of OpenFaceConfig.cmake
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/${PROJECT_NAME}ConfigVersion.cmake"
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY AnyNewerVersion
+)
+
+# This makes the project importable from the build directory
+export(EXPORT ${PROJECT_NAME}Targets
+	FILE "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/${PROJECT_NAME}Targets.cmake"
+	NAMESPACE OpenFace::
+)
+configure_file(cmake/${PROJECT_NAME}Config.cmake
+			   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/${PROJECT_NAME}Config.cmake"
+			   COPYONLY
+)
+
+set(ConfigPackageLocation share/${PROJECT_NAME}/cmake)
+
+# This makes the project importable from the install directory
+install(EXPORT ${PROJECT_NAME}Targets
+	FILE ${PROJECT_NAME}Targets.cmake
+		NAMESPACE OpenFace::
+		DESTINATION ${ConfigPackageLocation}
+)
+
+install(FILES
+	"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/${PROJECT_NAME}ConfigVersion.cmake"
+	"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/${PROJECT_NAME}Config.cmake"
+  DESTINATION ${ConfigPackageLocation}
+)
+

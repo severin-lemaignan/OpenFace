@@ -1,30 +1,30 @@
-#TBB library
-include_directories(${TBB_ROOT_DIR}/include)
-include_directories(${BLAS_ROOT_DIR})
-
-include_directories(${BOOST_INCLUDE_DIR})
-
-#OpenBlas library
-include_directories(../../3rdParty/OpenBLAS/include)
-
-#LandmarkDetector library
-include_directories(../../local/LandmarkDetector/include)
-
-#Utilities library
-include_directories(../../local/Utilities/include)
 
 SET(SOURCE
     src/GazeEstimation.cpp
 )
 
-SET(HEADERS
-    include/GazeEstimation.h
-)
+set(LIBNAME GazeAnalyser)
 
-include_directories(./include)
-include_directories(${GAZEANALYSER_SOURCE_DIR}/include)
+if(WIN32)
+    add_library(${LIBNAME} STATIC ${SOURCE})
+else()
+    add_library(${LIBNAME} SHARED ${SOURCE})
+endif()
 
-add_library( GazeAnalyser ${SOURCE} ${HEADERS})
+target_include_directories(${LIBNAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+    PRIVATE src)
 
-install (TARGETS GazeAnalyser DESTINATION lib)
-install (FILES ${HEADERS} DESTINATION include/OpenFace)
+set_property(TARGET ${LIBNAME} PROPERTY VERSION ${PROJECT_VERSION})
+set_property(TARGET ${LIBNAME} PROPERTY SOVERSION ${PROJECT_VERSION_MAJOR})
+
+target_link_libraries(${LIBNAME} FaceAnalyser Utilities boost tbb)
+
+install (TARGETS ${LIBNAME} EXPORT ${PROJECT_NAME}Targets
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
+
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
+

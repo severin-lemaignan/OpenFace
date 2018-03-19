@@ -1,5 +1,3 @@
-include_directories(${BOOST_INCLUDE_DIR})
-
 SET(SOURCE
     src/ImageCapture.cpp
 	src/RecorderCSV.cpp
@@ -11,21 +9,29 @@ SET(SOURCE
 	src/Visualizer.cpp
 )
 
-SET(HEADERS
-    include/ImageCapture.h	
-    include/RecorderCSV.h
-	include/RecorderHOG.h
-    include/RecorderOpenFace.h
-	include/RecorderOpenFaceParameters.h
-	include/SequenceCapture.h
-	include/VisualizationUtils.h
-	include/Visualizer.h	
-)
+set(LIBNAME Utilities)
 
-include_directories(./include)
-include_directories(${UTILITIES_SOURCE_DIR}/include)
+if(WIN32)
+    add_library(${LIBNAME} STATIC ${SOURCE})
+else()
+    add_library(${LIBNAME} SHARED ${SOURCE})
+endif()
 
-add_library( Utilities ${SOURCE} ${HEADERS})
+target_include_directories(${LIBNAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+    PRIVATE src)
 
-install (TARGETS Utilities DESTINATION lib)
-install (FILES ${HEADERS} DESTINATION include/OpenFace)
+set_property(TARGET ${LIBNAME} PROPERTY VERSION ${PROJECT_VERSION})
+set_property(TARGET ${LIBNAME} PROPERTY SOVERSION ${PROJECT_VERSION_MAJOR})
+
+target_link_libraries(${LIBNAME} boost blas opencv_highgui opencv_videoio)
+
+install (TARGETS ${LIBNAME} EXPORT ${PROJECT_NAME}Targets
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
+
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
+
+

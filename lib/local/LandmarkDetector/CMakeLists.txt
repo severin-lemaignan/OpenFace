@@ -1,14 +1,3 @@
-#TBB library
-include_directories(${TBB_ROOT_DIR}/include)
-
-include_directories(${BOOST_INCLUDE_DIR})
-
-#OpenBlas library
-include_directories(../../3rdParty/OpenBLAS/include)
-
-#Utilities library
-include_directories(../../local/Utilities/include)
-
 SET(SOURCE
     src/CCNF_patch_expert.cpp
 	src/LandmarkDetectionValidator.cpp
@@ -23,25 +12,28 @@ SET(SOURCE
 	src/stdafx.cpp
 )
 
-SET(HEADERS
-    include/CCNF_patch_expert.h	
-    include/LandmarkCoreIncludes.h
-	include/LandmarkDetectionValidator.h
-    include/LandmarkDetectorFunc.h
-	include/LandmarkDetectorModel.h
-	include/LandmarkDetectorParameters.h
-	include/LandmarkDetectorUtils.h
-	include/Patch_experts.h	
-    include/PAW.h
-	include/PDM.h
-	include/SVR_patch_expert.h		
-	include/stdafx.h
-)
+set(LIBNAME LandmarkDetector)
 
-include_directories(./include)
-include_directories(${LandmarkDetector_SOURCE_DIR}/include)
+if(WIN32)
+    add_library(${LIBNAME} STATIC ${SOURCE})
+else()
+    add_library(${LIBNAME} SHARED ${SOURCE})
+endif()
 
-add_library( LandmarkDetector ${SOURCE} ${HEADERS} )
+target_include_directories(${LIBNAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+    PRIVATE src)
 
-install (TARGETS LandmarkDetector DESTINATION lib)
-install (FILES ${HEADERS} DESTINATION include/OpenFace)
+set_property(TARGET ${LIBNAME} PROPERTY VERSION ${PROJECT_VERSION})
+set_property(TARGET ${LIBNAME} PROPERTY SOVERSION ${PROJECT_VERSION_MAJOR})
+
+target_link_libraries(${LIBNAME} Utilities boost tbb dlib opencv_objdetect opencv_calib3d)
+
+install (TARGETS ${LIBNAME} EXPORT ${PROJECT_NAME}Targets
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
+
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
+

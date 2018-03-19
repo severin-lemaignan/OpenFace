@@ -1,46 +1,37 @@
-#TBB library
-include_directories(${TBB_ROOT_DIR}/include)
-include_directories(${BLAS_ROOT_DIR})
-
-include_directories(${BOOST_INCLUDE_DIR})
-
-#OpenBlas library
-include_directories(../../3rdParty/OpenBLAS/include)
-
-#LandmarkDetector library
-include_directories(../../local/LandmarkDetector/include)
-
-#Utilities library
-include_directories(../../local/Utilities/include)
-
 SET(SOURCE
     src/Face_utils.cpp
 	src/FaceAnalyser.cpp
 	src/FaceAnalyserParameters.cpp
 	src/PAW.cpp
-	src/PDM.cpp		
+	src/PDM.cpp	
 	src/SVM_dynamic_lin.cpp
 	src/SVM_static_lin.cpp
 	src/SVR_dynamic_lin_regressors.cpp
 	src/SVR_static_lin_regressors.cpp
 )
 
-SET(HEADERS
-    include/Face_utils.h	
-	include/FaceAnalyser.h
-	include/FaceAnalyserParameters.h
-	include/PAW.h
-	include/PDM.h		
-	include/SVM_dynamic_lin.h
-	include/SVM_static_lin.h
-	include/SVR_dynamic_lin_regressors.h
-	include/SVR_static_lin_regressors.h
-)
+set(LIBNAME FaceAnalyser)
 
-include_directories(./include)
-include_directories(${FACEANALYSER_SOURCE_DIR}/include)
+if(WIN32)
+    add_library(${LIBNAME} STATIC ${SOURCE})
+else()
+    add_library(${LIBNAME} SHARED ${SOURCE})
+endif()
 
-add_library( FaceAnalyser ${SOURCE} ${HEADERS})
+target_include_directories(${LIBNAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+    PRIVATE src)
 
-install (TARGETS FaceAnalyser DESTINATION lib)
-install (FILES ${HEADERS} DESTINATION include/OpenFace)
+set_property(TARGET ${LIBNAME} PROPERTY VERSION ${PROJECT_VERSION})
+set_property(TARGET ${LIBNAME} PROPERTY SOVERSION ${PROJECT_VERSION_MAJOR})
+
+target_link_libraries(${LIBNAME} LandmarkDetector Utilities boost tbb)
+
+install (TARGETS ${LIBNAME} EXPORT ${PROJECT_NAME}Targets
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})  # This is for Windows
+
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
+
