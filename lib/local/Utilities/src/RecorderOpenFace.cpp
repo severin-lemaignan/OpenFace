@@ -42,8 +42,8 @@
 #include <iostream>
 
 // Boost includes for file system manipulation
-#include <filesystem.hpp>
-#include <filesystem/fstream.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/algorithm/string.hpp>
 
 using namespace boost::filesystem;

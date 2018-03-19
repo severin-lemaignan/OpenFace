@@ -37,8 +37,8 @@
 #include <iostream>
 
 // Boost includes
-#include <filesystem.hpp>
-#include <filesystem/fstream.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/algorithm/string.hpp>
 
 // OpenCV includes

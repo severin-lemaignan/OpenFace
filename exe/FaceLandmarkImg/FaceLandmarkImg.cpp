@@ -44,8 +44,8 @@
 #include <opencv2/imgproc.hpp>
 
 // Boost includes
-#include <filesystem.hpp>
-#include <filesystem/fstream.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 #include <dlib/image_processing/frontal_face_detector.h>
 

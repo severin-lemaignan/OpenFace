@@ -46,8 +46,8 @@
 #include <opencv2/highgui/highgui.hpp>
 
 // Boost includes
-#include <filesystem.hpp>
-#include <filesystem/fstream.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/algorithm/string.hpp>
 
 // Local includes
