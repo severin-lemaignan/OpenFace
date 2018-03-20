@@ -44,6 +44,8 @@
 #include <GazeEstimation.h>
 #include <FaceAnalyser.h>
 
+#include <tbb/tbb.h>
+
 #include <fstream>
 #include <sstream>
 
