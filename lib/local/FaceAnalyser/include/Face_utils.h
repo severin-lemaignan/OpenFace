@@ -38,8 +38,8 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include "PDM.h"
-#include "PAW.h"
+#include "Face_PDM.h"
+#include "Face_PAW.h"
 
 namespace FaceAnalysis
 {

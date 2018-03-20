@@ -34,7 +34,7 @@
 
 #include "stdafx.h"
 
-#include <PDM.h>
+#include "LandmarkDetector_PDM.h"
 
 // OpenCV include
 #include <opencv2/core/core.hpp>

@@ -41,7 +41,7 @@
 
 #include "SVR_patch_expert.h"
 #include "CCNF_patch_expert.h"
-#include "PDM.h"
+#include "LandmarkDetector_PDM.h"
 
 namespace LandmarkDetector
 {

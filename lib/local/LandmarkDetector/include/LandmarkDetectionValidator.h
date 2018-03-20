@@ -66,7 +66,7 @@
 #include <vector>
 
 // Local includes
-#include "PAW.h"
+#include "LandmarkDetector_PAW.h"
 
 using namespace std;
 

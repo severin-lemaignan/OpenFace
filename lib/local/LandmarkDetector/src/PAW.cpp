@@ -34,7 +34,7 @@
 
 #include "stdafx.h"
 
-#include "PAW.h"
+#include "LandmarkDetector_PAW.h"
 
 // OpenCV includes
 #include <opencv2/core/core.hpp>

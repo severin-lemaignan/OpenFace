@@ -43,7 +43,7 @@
 #include <dlib/image_processing/frontal_face_detector.h>
 #include <dlib/opencv.h>
 
-#include "PDM.h"
+#include "LandmarkDetector_PDM.h"
 #include "Patch_experts.h"
 #include "LandmarkDetectionValidator.h"
 #include "LandmarkDetectorParameters.h"

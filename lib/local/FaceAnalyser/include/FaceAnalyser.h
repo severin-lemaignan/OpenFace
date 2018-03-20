@@ -48,7 +48,7 @@
 #include "SVR_static_lin_regressors.h"
 #include "SVM_static_lin.h"
 #include "SVM_dynamic_lin.h"
-#include "PDM.h"
+#include "Face_PDM.h"
 #include "FaceAnalyserParameters.h"
 
 namespace FaceAnalysis
